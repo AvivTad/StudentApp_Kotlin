@@ -21,10 +21,29 @@ import com.example.studentapp.R
 import android.content.Context
 import androidx.compose.foundation.clickable
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.runtime.DisposableEffect
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+
+class StudentsListActivity : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContent {
+            StudentAppTheme {
+                StudentsListScreen(students = StudentsRepository.getAllStudents(), context = this)
+            }
+        }
+    }
+}
 
 @Composable
 fun StudentsListScreen(students: List<Student>, context: Context) {
-    val studentsState = remember { mutableStateOf(students.toMutableList()) }
+    val studentsState = remember { mutableStateOf(students) }
+
+    DisposableEffect(Unit) {
+        studentsState.value = students
+        onDispose { }
+    }
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -96,7 +115,8 @@ fun StudentItem(student: Student, onCheckedChange: (Boolean) -> Unit, context: C
 @Preview(showBackground = true)
 @Composable
 fun PreviewStudentsListScreen() {
+    val students = StudentsRepository.getAllStudents()
     StudentAppTheme {
-        StudentsListScreen(students = StudentsRepository.getAllStudents(), context = LocalContext.current)
+        StudentsListScreen(students = students, context = LocalContext.current)
     }
 }
