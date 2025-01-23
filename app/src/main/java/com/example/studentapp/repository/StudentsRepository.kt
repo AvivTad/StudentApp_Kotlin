@@ -18,9 +18,16 @@ fun addStudent(student: Student) {
 }
 
 fun updateStudent(updatedStudent: Student) {
-    val index = studentsList.indexOfFirst { it.id == updatedStudent.id }
-    if (index != -1) {
-        studentsList[index] = updatedStudent
+    val existingIndex = studentsList.indexOfFirst { it.id == updatedStudent.id }
+    if (existingIndex != -1) {
+        val currentIsChecked = studentsList[existingIndex].isChecked
+        studentsList[existingIndex] = updatedStudent.copy(isChecked = currentIsChecked)
+    } else {
+        val oldIndex = studentsList.indexOfFirst { it.name == updatedStudent.name && it.id != updatedStudent.id }
+        if (oldIndex != -1) {
+            studentsList.removeAt(oldIndex)
+        }
+        studentsList.add(updatedStudent)
     }
 }
 

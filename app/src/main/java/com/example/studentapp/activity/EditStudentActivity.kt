@@ -2,6 +2,7 @@ package com.example.studentapp.activity
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -16,15 +17,20 @@ import androidx.compose.ui.platform.LocalContext
 import com.example.studentapp.model.Student
 import com.example.studentapp.repository.StudentsRepository
 import com.example.studentapp.ui.theme.StudentAppTheme
-import com.example.studentapp.MainActivity
-
 
 class EditStudentActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         val studentId = intent.getIntExtra("studentId", -1)
+        Log.d("EditStudentActivity", "Received studentId: $studentId")
+
         val student = StudentsRepository.getStudentById(studentId)
+        if (student == null) {
+            Log.e("EditStudentActivity", "Student not found for ID: $studentId")
+        } else {
+            Log.d("EditStudentActivity", "Student found: $student")
+        }
 
         setContent {
             StudentAppTheme {
@@ -40,6 +46,7 @@ class EditStudentActivity : ComponentActivity() {
 
 @Composable
 fun EditStudentScreen(student: Student) {
+    var id by remember { mutableStateOf(TextFieldValue(student.id.toString())) }
     var name by remember { mutableStateOf(TextFieldValue(student.name)) }
     var phone by remember { mutableStateOf(TextFieldValue(student.phone)) }
     var address by remember { mutableStateOf(TextFieldValue(student.address)) }
@@ -58,6 +65,15 @@ fun EditStudentScreen(student: Student) {
             label = { Text("Name") }
         )
 
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Text(text = "ID:")
+        TextField(
+            value = id,
+            onValueChange = { id = it },
+            modifier = Modifier.fillMaxWidth(),
+            label = { Text("ID") }
+        )
         Spacer(modifier = Modifier.height(8.dp))
 
         Text(text = "Phone:")
@@ -86,28 +102,25 @@ fun EditStudentScreen(student: Student) {
         ) {
             Button(
                 onClick = {
-                    val intent = Intent(context, StudentDetailsActivity::class.java)
-                    intent.putExtra("studentId", student.id)
-                    context.startActivity(intent)
-                    (context as? ComponentActivity)?.finish()
-                },
-                modifier = Modifier.weight(1f)
-            ) {
-                Text(text = "Cancel")
-            }
+                    val newId = id.text.toIntOrNull()
+                    if (newId == null || StudentsRepository.getStudentById(newId) != null && newId != student.id) {
+                        Toast.makeText(context, "ID must be unique and valid", Toast.LENGTH_SHORT).show()
+                        Log.e("EditStudentScreen", "Invalid or duplicate ID: $newId")
+                        return@Button
+                    }
 
-            Button(
-                onClick = {
                     val updatedStudent = student.copy(
+                        id = newId ?: student.id,
                         name = name.text,
                         phone = phone.text,
                         address = address.text
                     )
+                    Log.d("EditStudentScreen", "Updating student: $updatedStudent")
+
                     StudentsRepository.updateStudent(updatedStudent)
                     Toast.makeText(context, "Student updated successfully", Toast.LENGTH_SHORT).show()
 
-                    val intent = Intent(context, StudentDetailsActivity::class.java)
-                    intent.putExtra("studentId", updatedStudent.id)
+                    val intent = Intent(context, StudentsListActivity::class.java)
                     context.startActivity(intent)
                     (context as? ComponentActivity)?.finish()
                 },
@@ -121,10 +134,11 @@ fun EditStudentScreen(student: Student) {
 
         Button(
             onClick = {
+                Log.d("EditStudentScreen", "Deleting student: ${student.id}")
                 StudentsRepository.deleteStudent(student.id)
                 Toast.makeText(context, "Student deleted", Toast.LENGTH_SHORT).show()
 
-                val intent = Intent(context, MainActivity::class.java)
+                val intent = Intent(context, StudentsListActivity::class.java)
                 context.startActivity(intent)
                 (context as? ComponentActivity)?.finish()
             },
