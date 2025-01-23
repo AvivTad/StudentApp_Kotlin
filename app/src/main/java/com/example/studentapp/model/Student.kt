@@ -3,5 +3,7 @@ package com.example.studentapp.model
 data class Student(
     val id: Int,
     val name: String,
-    val imageUrl: String? = null
+    var isChecked: Boolean = false,
+    val phone: String,
+    val address: String
 )

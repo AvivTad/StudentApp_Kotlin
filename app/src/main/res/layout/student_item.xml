@@ -9,7 +9,7 @@
         android:id="@+id/studentPic"
         android:layout_width="50dp"
         android:layout_height="50dp"
-        android:src="@android:drawable/ic_menu_camera"
+        android:src="@drawable/ic_student_pic"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent" />
